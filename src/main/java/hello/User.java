@@ -1,8 +1,11 @@
 package hello;
 
-import java.util.ArrayList;
+import org.springframework.hateoas.ResourceSupport;
 
-public class User {
+import java.util.ArrayList;
+import java.util.Random;
+
+public class User extends ResourceSupport {
 
     private final long id;
     private final ArrayList<Float> results;
@@ -10,9 +13,14 @@ public class User {
     public User(long id){
         this.id = id;
         this.results = new ArrayList<>();
+
+        //Generate random numbers to add as results
+        for(int i = 0; i<10; i++){
+            results.add(new Random().nextFloat());
+        }
     }
 
-    public long getId(){
+    public long getUserId(){
         return this.id;
     }
 

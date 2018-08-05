@@ -4,6 +4,13 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
+import hello.exceptions.UserIdNotSupportedException;
+import hello.exceptions.UserNotFoundException;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.LinkBuilder;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -18,7 +25,7 @@ public class UserController {
     private final AtomicLong counter = new AtomicLong();
 
     @GetMapping("/{userId}")
-    public User getUser (@PathVariable long userId) throws UserNotFoundException{
+    public User getUser (@PathVariable long userId) throws UserNotFoundException {
 
             User user = this.findUserById(userId);
             return user;
@@ -26,12 +33,23 @@ public class UserController {
         //        String.format(template, name));
     }
 
+    @GetMapping(value = "/hateoas/{userId}", produces = MediaTypes.HAL_JSON_VALUE)
+    public User getUserHateoas(@PathVariable long userId ) throws UserNotFoundException{
+        User user = this.findUserById(userId);
+
+        Link link = ControllerLinkBuilder.linkTo(UserController.class)
+                .slash(user.getUserId()).withSelfRel();
+
+        user.add(link);
+
+        return user;
+    }
 
     @PostMapping("/newUser")
-    public ResponseEntity<?> newUser(@RequestParam("userId") long userId) throws UserIdNotSupported{
+    public ResponseEntity<?> newUser(@RequestParam("userId") long userId) throws UserIdNotSupportedException {
 
         if(this.isIdAlreadyUsed(userId))
-            throw new UserIdNotSupported(userId);
+            throw new UserIdNotSupportedException(userId);
 
         User user = new User(userId);
         users.add(user);
@@ -49,7 +67,7 @@ public class UserController {
     private boolean isIdAlreadyUsed(long userId) {
 
         for (User user : users) {
-            if (user.getId() == userId)
+            if (user.getUserId() == userId)
                 return true;
         }
 
@@ -59,7 +77,7 @@ public class UserController {
     private User findUserById(long userId) throws UserNotFoundException{
 
         for(User user : users){
-            if(user.getId() == userId)
+            if(user.getUserId() == userId)
                 return user;
         }
 
