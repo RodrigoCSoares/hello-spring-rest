@@ -15,6 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -37,12 +40,19 @@ public class UserController {
     public User getUserHateoas(@PathVariable long userId ) throws UserNotFoundException{
         User user = this.findUserById(userId);
 
-        Link link = ControllerLinkBuilder.linkTo(UserController.class)
-                .slash(user.getUserId()).withSelfRel();
+        Link link = linkTo(UserController.class)
+                .slash(user.getResults()).withSelfRel();
 
-        user.add(link);
+        user.add(linkTo(methodOn(UserController.class).getResults(userId)).withSelfRel());
 
         return user;
+    }
+
+    @GetMapping(value = "/hateoas/{userId}/results")
+    public ArrayList<Float> getResults(@PathVariable long userId) throws UserNotFoundException{
+        User user = this.findUserById(userId);
+
+        return user.getResults();
     }
 
     @PostMapping("/newUser")
